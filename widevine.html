@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Brightcove Test Page</title>
+    <style>
+      body {
+        font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+      }
+      .video-js {
+        width: 640px;
+        height: 360px;
+      }
+    </style>
+    <link rel="stylesheet" href="https://players.brightcove.net/videojs-bc-playlist-ui/5.1.1/videojs-bc-playlist-ui.css">
+    <link rel="stylesheet" href="https://players.brightcove.net/videojs-overlay/3.0.0/videojs-overlay.css">
+  </head>
+  <body>
+    <h1>Brightcove Player Test</h1>
+    <div id="placeHolder">
+        <video-js id="myPlayerID"
+          data-account="6313395549001"
+          data-player="IlHR4vKkq"
+          data-embed="default" controls>
+        </video-js>
+    </div>
+    <script src="https://players.brightcove.net/6313395549001/IlHR4vKkq_default/index.js"></script>
+    <script src="https://players.brightcove.net/videojs-bc-playlist-ui/5.1.1/videojs-bc-playlist-ui.js"></script>
+    <script src="https://players.brightcove.net/videojs-overlay/3.0.0/videojs-overlay.min.js"></script>
+
+    <script>
+        async function getVideoData(url) {
+          const response = await fetch(url);
+          const jsonData = await response.json();
+          return jsonData.query.results.mediaObj[0];
+        }
+
+        async function promisifyCatalogGetVideo(bcp) {
+          return new Promise((resolve, reject) => {
+            player.catalog.getVideo({
+              type: 'video',
+              id: bcp.vid,
+              bcovAuthToken: bcp.token
+            }, (err, video) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(video);
+              }
+            });
+          });
+        }
+
+        var player = bc("myPlayerID");
+        var playlistOptions = {
+          "nextButton": true,
+          "autoadvance": 0,
+          "nextEndscreen": false,
+          "nextOverlay": false,
+          "playOnSelect": true,
+          "repeat": false,
+          "shuffle": false,
+          "playlistPicker": false,
+          "horizontal": false
+        };
+        player.bcPlaylistUi(playlistOptions);
+        player.ima3({
+          serverUrl: async (cb) => {
+            cb(null);
+          },
+          showVpaidControls: true,
+          timeout: 10 * 1000,
+          vpaidMode: 'INSECURE',
+          ima3SdkSettings: {
+            numRedirects: 6
+          }
+        });
+
+        player.ready(async () => {
+          window['player'] = player;
+          const bcp = {
+            token: "eyJhbGciOiJSUzI1NiJ9.eyJhY2NpZCI6IjYzMTMzOTU1NDkwMDEiLCJhdWQiOlsicGxheWJhY2suYXBpLmJyaWdodGNvdmUuY29tIl0sInBraWQiOiI4M2I5NWU1My1lOTA2LTQyYzktOTA3YS0yMTY4ZDZmYTcwZTUiLCJleHAiOjE3NzY0NTYxMDIsImlhdCI6MTc3Mzk1NjEwMn0.Gr4ikgbJvKsx8J-jNT9aWYzvpQ4Sogr3Uu2iQPBhFG2wmGFANEGQiiMeQKL-ZoGVUwRX329vFDiUkDnLcyCcrb3oMyshSPxJHHUro11qOokXJ6RfZCUYip-pGjS2TJDNcG9Zv5U7dPhxNO-pVi11Xi7HfoNegZsId0GTw-Hd1gA9qVOyN3AaxJCReLZtgeB9q0rR21KPWcE3zYTubfQ6C1szaPXB8j6ISqtzsTPvtLKj5wOTQUu4hKC5ud4NGyNnGtmnyT1iucPxhXkpQij2Mm3ebYLsYHyriPVBMjb-DXtWAsN1e1wQRHl4F0TFvYWBwKnzT8aEMJcPDb1ad126KQ",
+            vid: "6391075984112"
+          };
+
+          const catalogVideo1 = await promisifyCatalogGetVideo(bcp);
+          console.log(catalogVideo1)
+
+          player.playlist([catalogVideo1]);
+          player.catalog.load(catalogVideo1);
+        });
+    </script>
+  </body>
+</html>
